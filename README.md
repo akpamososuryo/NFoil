@@ -6,7 +6,7 @@ NFoil is a fork of [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by
 
 ---
 
-## 🚀 Performance
+##  Performance
 
 Complete alpha sweep benchmark (NACA 2412, 16 angles, $Re=10^6$):
 
@@ -23,7 +23,7 @@ Both versions share the same algorithmic complexity of $\approx O(N^1.35)$. The 
 
 ---
 
-## 📋 Changes from Original `mfoil`
+##  Changes from Original `mfoil`
 
 ### 1. Numba JIT-Compiled Physics Kernels
 
@@ -73,7 +73,7 @@ The #1 bottleneck in the original code was SciPy sparse matrix overhead inside t
 
 ---
 
-## 🖥️ Interactive GUI
+##  Interactive GUI
 
 NFoil includes a full-featured GUI (`gui.py`) built with CustomTkinter:
 
@@ -94,7 +94,7 @@ python gui.py
 
 ---
 
-## 📦 Dependencies
+##  Dependencies
 
 ```
 numpy
@@ -105,7 +105,7 @@ customtkinter   # for GUI only
 taichi           # optional, for GPU flow fields
 ```
 
-## 🏃 Quick Start
+##  Quick Start
 
 ```python
 import nfoil as nf
@@ -121,10 +121,10 @@ print(f"Cd = {N.post.cd:.6f}")
 print(f"Cm = {N.post.cm:.4f}")
 ```
 
-## 📄 License
+##  License
 
 MIT License — Copyright (C) 2026 Cayetano Martínez-Muriel. 
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
-Based on [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski — a Python translation of Mark Drela's integral boundary layer methodology (XFOIL).
+Based on [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski.
