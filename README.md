@@ -17,7 +17,7 @@ Complete alpha sweep benchmark (NACA 2412, 16 angles, $Re=10^6$):
 | 300    | 117.2       | **7.6**      | **15.5x** |
 | 400    | 182.2       | **12.3**     | **14.8x** |
 
-Both versions share the same algorithmic complexity of $\approx O(N^1.35)$. The speedup comes entirely from eliminating Python/SciPy overhead via JIT compilation and dense array operations.
+Both versions share the same algorithmic complexity of $\approx O(N^{1.35})$. The speedup comes entirely from eliminating Python/SciPy overhead via JIT compilation and dense array operations.
 
 ![Scalability Benchmark](scalability_benchmark.png)
 
@@ -56,20 +56,12 @@ The #1 bottleneck in the original code was SciPy sparse matrix overhead inside t
 ### 3. Vectorized Sensitivity Assembly
 
 `calc_ue_m` (inviscid edge velocity sensitivity matrix) was rebuilt with parallelised Numba kernels:
-
 - `build_B_bulk`: Vectorized source-panel influence coefficient assembly over all panels simultaneously, replacing an O(N²) Python loop.
 - `build_Csig_bulk`: Vectorized wake source-influence assembly.
 
 ### 4. Robust Solver Improvements
 
 - **Singular matrix fallback**: `solve_glob` catches `np.linalg.LinAlgError` and falls back to `np.linalg.lstsq` for near-singular Jacobians (common at very low Re or high α).
-- **Bug fix**: Fixed missing `.shape` in sparse matrix comparison at line 2057 of the original code (`R_x == (3*Nsys, Nsys)` → `R_x.shape == (3*Nsys, Nsys)`).
-
-### 5. Code Cleanup
-
-- Consolidated duplicate imports (3× `from scipy import sparse`, 2× `import numpy as np`, etc.) into a single clean import block.
-- Removed dead `build_glob_sys_jit` stub (34 lines of placeholder code).
-- Restored complete copyright header that was fragmented by earlier edits.
 
 ---
 
