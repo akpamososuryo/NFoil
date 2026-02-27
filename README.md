@@ -2,22 +2,26 @@
 
 **High-performance subsonic airfoil analysis with Numba JIT acceleration.**
 
-NFoil is a fork of [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski, rewritten with Numba JIT compilation for **~15x faster** subsonic airfoil analysis. It retains full numerical compatibility with the original while dramatically reducing solve times with the addition of a Graphical User Interface.
+NFoil is a fork of [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski, rewritten with Numba JIT compilation for **~18x faster** subsonic airfoil analysis. It retains full numerical compatibility with the original while dramatically reducing solve times with the addition of a Graphical User Interface.
+
+> _Developed and optimized by Cayetano Martínez-Muriel with assistance from Google Antigravity. Based on the original mfoil by Krzysztof J. Fidkowski._
 
 ---
 
-##  Performance
+## Performance
 
 Complete alpha sweep benchmark (NACA 2412, 16 angles, $Re=10^6$):
 
 | Panels | Original (s) | NFoil (s) | Speedup |
 |--------|-------------|--------------|---------|
-| 100    | 28.2        | **1.8**      | **15.6x** |
-| 200    | 70.4        | **4.7**      | **15.0x** |
-| 300    | 117.2       | **7.6**      | **15.5x** |
-| 400    | 182.2       | **12.3**     | **14.8x** |
+| 100    | 26.5        | **1.4**      | **18.8x** |
+| 200    | 67.7        | **4.0**      | **17.0x** |
+| 300    | 115.6       | **6.1**      | **18.8x** |
+| 400    | 182.2       | **11.3**     | **14.8x** |
 
 Both versions share the same algorithmic complexity of $\approx O(N^{1.35})$. The speedup comes entirely from eliminating Python/SciPy overhead via JIT compilation and dense array operations.
+
+> _Results obtained after running both versions on a M1-Max MacBook Pro._
 
 ![Scalability Benchmark](scalability_benchmark.png)
 
