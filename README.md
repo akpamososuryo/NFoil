@@ -31,29 +31,27 @@ Both versions share the same algorithmic complexity of $\approx O(N^{1.35})$. Th
 
 ---
 
-##  Changes from Original `mfoil`
+##  Interactive GUI
 
-### 1. Numba JIT-Compiled Physics Kernels
+NFoil includes a full-featured GUI (`gui.py`) built with CustomTkinter:
 
-All core boundary-layer functions have been rewritten as `@njit(cache=True, fastmath=True)` kernels:
+- **Real-time analysis**: Single-point solve with live Cp distribution, airfoil geometry (with physical BL thickness $\delta$), and aerodynamic coefficients.
+- **Robust polar sweeps**: Multi-$\alpha$ sweeps with automatic continuation past non-converged points. If a point fails, the solver retries with a cold BL restart; if it still fails, it skips that point and continues the sweep. All computed cases from multiple runs are stored with descriptive labels (NACA/$Re$/$\alpha$/$M$) in a persistent dropdown. It is possible to overlay polars from multiple Reynolds numbers for comparison.
+- **Target Cl (Inverse Mode)**: A dedicated toggle and input field to find the angle of attack for a specific lift coefficient ($C_L$), integrated into both single-point solves and polar sweeps.
+- **Load/Unload Airfoil**: Directly load custom coordinates from `.dat` or `.txt` files (TE-to-TE, CCW/CW). Includes an "Unload" button to instantly revert to the parameterized NACA generator.
+- **BL properties tab**: Skin friction (Cf), displacement thickness (δ*), momentum thickness (θ), and shape parameter (Hk) across upper, lower, and wake surfaces.
+- **GPU flow fields** (optional): Real-time velocity/pressure contour maps via [Taichi](https://www.taichi-lang.org/) (`taichi_fields.py`), leveraging Metal/CUDA GPUs.
+- **ASCII export**: Cp curves, geometry, skin friction arrays, and polar data.
 
-| Function | Description |
-|----------|-------------|
-| `get_Hk`, `get_Hs`, `get_Hss` | Shape parameter correlations |
-| `get_Ret`, `get_cf`, `get_cd` | Skin friction & dissipation |
-| `get_Us`, `get_Mach2` | Boundary layer edge quantities |
-| `get_cttr`, `get_de` | Transition & entrainment |
-| `residual_station_jit` | Station-level BL residual + Jacobian |
-| `residual_transition` | Transition interval residual |
-| `_calc_force_inviscid_jit` | Pressure force integration |
-| `build_B_bulk`, `build_Csig_bulk` | Inviscid influence matrix assembly |
-| `march_amplification` | eⁿ transition amplification |
-| `TE_info_jit` | Trailing-edge geometry |
-| `cosd`, `sind`, `norm2` | Utility functions |
+```bash
+python gui.py
+```
 
-**Key design choice:** BL parameters are passed as a `namedtuple` (`BL_Param`) rather than mutable class attributes, allowing Numba to compile the full residual evaluation chain without falling back to Python object mode.
+---
 
-### 2. Dense Array Assembly (Eliminating SciPy Sparse Overhead)
+##  Main Changes from Original `mfoil`
+
+### 1. Dense Array Assembly (Eliminating SciPy Sparse Overhead)
 
 The #1 bottleneck in the original code was SciPy sparse matrix overhead inside the coupled Newton solver:
 
@@ -61,36 +59,19 @@ The #1 bottleneck in the original code was SciPy sparse matrix overhead inside t
 
 - **`solve_glob`**: Replaced `scipy.sparse.lil_matrix` assembly + `scipy.sparse.linalg.spsolve` with dense `np.zeros` array + `np.linalg.solve`. Includes a `LinAlgError` fallback to `np.linalg.lstsq` for near-singular Jacobians at extreme operating conditions.
 
+### 2. Numba JIT-Compiled Physics Kernels
+
+All core boundary-layer functions have been rewritten as `@njit(cache=True, fastmath=True)` kernels. 
+
 ### 3. Vectorized Sensitivity Assembly
 
 `calc_ue_m` (inviscid edge velocity sensitivity matrix) was rebuilt with parallelised Numba kernels:
-- `build_B_bulk`: Vectorized source-panel influence coefficient assembly over all panels simultaneously, replacing an O(N²) Python loop.
+- `build_B_bulk`: Vectorized source-panel influence coefficient assembly over all panels simultaneously, replacing an O($N^2$) Python loop.
 - `build_Csig_bulk`: Vectorized wake source-influence assembly.
 
 ### 4. Robust Solver Improvements
 
-- **Singular matrix fallback**: `solve_glob` catches `np.linalg.LinAlgError` and falls back to `np.linalg.lstsq` for near-singular Jacobians (common at very low Re or high α).
-
----
-
-##  Interactive GUI
-
-NFoil includes a full-featured GUI (`gui.py`) built with CustomTkinter:
-
-- **Real-time analysis**: Single-point solve with live Cp distribution, airfoil geometry (with physical BL thickness δ), and aerodynamic coefficients.
-- **Robust polar sweeps**: Multi-angle α sweeps with automatic continuation past non-converged points. If a point fails, the solver retries with a cold BL restart; if it still fails, it skips that point and continues the sweep. All computed cases from multiple runs are stored with descriptive labels (NACA/Re/α/M) in a persistent dropdown.
-- **Target Cl (Inverse Mode)**: A dedicated toggle and input field to find the angle of attack for a specific lift coefficient ($C_L$), integrated into both single-point solves and polar sweeps.
-- **Load/Unload Airfoil**: Directly load custom coordinates from `.dat` or `.txt` files (TE-to-TE, CCW/CW). Includes an "Unload" button to instantly revert to the parameterized NACA generator.
-- **Real-time analysis**: Single-point solve with live Cp distribution, airfoil geometry (with physical BL thickness δ), and aerodynamic coefficients.
-- **Lift & drag polars**: Overlay polars from multiple Reynolds numbers for comparison.
-- **BL properties tab**: Skin friction (Cf), displacement thickness (δ*), momentum thickness (θ), and shape parameter (Hk) across upper, lower, and wake surfaces.
-- **Flap deflection**: Geometric trailing-edge flap with configurable hinge point and deflection angle.
-- **GPU flow fields** (optional): Real-time velocity/pressure contour maps via [Taichi](https://www.taichi-lang.org/) (`taichi_fields.py`), leveraging Metal/CUDA GPUs.
-- **ASCII export**: Cp curves, geometry, skin friction arrays, and polar data.
-
-```bash
-python gui.py
-```
+- **Singular matrix fallback**: `solve_glob` catches `np.linalg.LinAlgError` and falls back to `np.linalg.lstsq` for near-singular Jacobians (common at very low Reynolds numbers or high angles of attack).
 
 ---
 
@@ -127,4 +108,6 @@ MIT License — Copyright (C) 2026 Cayetano Martínez-Muriel.
 
 ##  Acknowledgments
 
-Based on [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski.
+Many thanks to Krzysztof J. Fidkowski for his work on [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil). 
+
+Thanks to the [Google Antigravity](https://antigravity.dev/) team for their tool.
