@@ -14,7 +14,7 @@ NFoil is a fork of [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by
 
 ## Performance
 
-Complete alpha sweep benchmark (NACA 2412, 16 angles, $Re=10^6$):
+Test: Polar computation consisting of 16 angles of attack for the viscous flow around a NACA 2412 airfoil at $Re=10^6$):
 
 | Panels | Original (s) | NFoil (s) | Speedup |
 |--------|-------------|--------------|---------|
