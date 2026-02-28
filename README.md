@@ -4,7 +4,7 @@
 
 NFoil is a fork of [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski, rewritten with Numba JIT compilation for **~18x faster** subsonic airfoil analysis. It retains full numerical compatibility with the original while dramatically reducing solve times with the addition of a Graphical User Interface.
 
-<img src="gui.png" alt="gui" width="600"/>
+<img src="complete_gui.png" alt="gui" width="600"/>
 
 <img src="BL.png" alt="BL" width="600"/>
 
