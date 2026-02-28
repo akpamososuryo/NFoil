@@ -4,6 +4,10 @@
 
 NFoil is a fork of [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil) by Krzysztof J. Fidkowski, rewritten with Numba JIT compilation for **~18x faster** subsonic airfoil analysis. It retains full numerical compatibility with the original while dramatically reducing solve times with the addition of a Graphical User Interface.
 
+<img src="gui.png" alt="gui" width="600"/>
+
+<img src="BL.png" alt="BL" width="600"/>
+
 > _Developed and optimized by Cayetano Martínez-Muriel with assistance from Google Antigravity. Based on the original mfoil by Krzysztof J. Fidkowski._
 
 ---
@@ -17,13 +21,13 @@ Complete alpha sweep benchmark (NACA 2412, 16 angles, $Re=10^6$):
 | 100    | 26.5        | **1.4**      | **18.8x** |
 | 200    | 67.7        | **4.0**      | **17.0x** |
 | 300    | 115.6       | **6.1**      | **18.8x** |
-| 400    | 182.2       | **11.3**     | **14.8x** |
+| 400    | 180.8       | **11.3**     | **16.0x** |
 
 Both versions share the same algorithmic complexity of $\approx O(N^{1.35})$. The speedup comes entirely from eliminating Python/SciPy overhead via JIT compilation and dense array operations.
 
-> _Results obtained after running both versions on a M1-Max MacBook Pro._
+> _Results obtained after running both versions in the command line on a M1-Max MacBook Pro. Using the GUI will result in slower performance due to the overhead of the GUI._
 
-![Scalability Benchmark](scalability_benchmark.png)
+<img src="scalability_benchmark.png" alt="scalability_benchmark" width="600"/>
 
 ---
 
@@ -109,7 +113,7 @@ import nfoil as nf
 # Create and solve
 N = nf.nfoil(naca='2412', npanel=200)
 N.setoper(alpha=5, Re=1e6, Ma=0.3)
-N.solve() 
+N.solve()
 
 # Results
 print(f"Cl = {N.post.cl:.4f}")
