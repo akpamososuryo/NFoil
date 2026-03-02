@@ -117,6 +117,6 @@ MIT License — Copyright (C) 2026 Cayetano Martínez-Muriel.
 
 ##  Acknowledgments
 
-Many thanks to Krzysztof J. Fidkowski for his work on [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil). 
+Many thanks to Krzysztof J. Fidkowski for his work on [mfoil](https://websites.umich.edu/~kfid/codes.html#mfoil), and to the XFOIL team for the original tool.
 
-Thanks to the [Google Antigravity](https://antigravity.dev/) team for their tool.
+Thanks to the [Google Antigravity](https://antigravity.dev/) team for the IDE.
