@@ -39,9 +39,9 @@ NFoil includes a full-featured GUI (`gui.py`) built with CustomTkinter:
 - **Robust polar computations**: Multi-$\alpha$ sweep with automatic continuation past non-converged points. If a point fails, the solver retries with a cold BL restart; if it still fails, it skips that point and continues the sweep. All computed cases from multiple runs are stored with descriptive labels (NACA/$Re$/$\alpha$/$M$) in a persistent dropdown. It is possible to overlay polars from multiple Reynolds numbers for comparison.
 - **Target Cl (Inverse Mode)**: A dedicated toggle and input field to find the angle of attack for a specific lift coefficient ($C_L$), integrated into both single-point solves and polar sweeps.
 - **Load/Unload Airfoil**: Directly load custom coordinates from `.dat` or `.txt` files (TE-to-TE, CCW/CW). Includes an "Unload" button to instantly revert to the parameterized NACA generator.
-- **BL properties tab**: Skin friction (Cf), displacement thickness (δ*), momentum thickness (θ), and shape parameter (Hk) across upper, lower, and wake surfaces.
+- **BL properties tab**: Skin friction ($C_f$), displacement thickness ($\delta^*$), momentum thickness ($\theta$), and shape parameter ($H_k$) across upper, lower, and wake surfaces.
 - **GPU flow fields** (optional): Real-time velocity/pressure contour maps via [Taichi Lang](https://www.taichi-lang.org/) (`taichi_fields.py`), leveraging Metal/CUDA (and other) GPUs.
-- **ASCII export**: Cp curves, geometry, skin friction arrays, and polar data.
+- **ASCII export**: $C_p$ curves, geometry, skin friction arrays, and polar data.
 
 ```bash
 python gui.py
