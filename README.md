@@ -25,7 +25,7 @@ Test: Polar computation consisting of 16 angles of attack for the viscous flow a
 
 Both versions share the same algorithmic complexity of $\approx O(N^{1.35})$. The speedup comes entirely from eliminating Python/SciPy overhead via JIT compilation and dense array operations.
 
-> _Results obtained after running both versions in the command line on a M1-Max MacBook Pro. Using the GUI will likely result in slower performance due to the overhead of the GUI._
+> _Results obtained after running both versions in the command line on a M1-Max MacBook Pro._
 
 <img src="figs/scalability_benchmark.png" alt="scalability_benchmark" width="600"/>
 
@@ -105,6 +105,11 @@ print(f"Cl = {N.post.cl:.4f}")
 print(f"Cd = {N.post.cd:.6f}")
 print(f"Cm = {N.post.cm:.4f}")
 ```
+
+## Citation
+If you use or modify this tool, cite this work as:
+
+- Martínez-Muriel, C. NFoil (2026), GitHub Repository, https://github.com/cayetanomarmur/NFoil
 
 ##  License
 
