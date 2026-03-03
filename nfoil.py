@@ -3708,8 +3708,7 @@ def get_cDi(U, param):
             cDi = cDi + cDi0; cDi_U = cDi_U + cDi0_U
             cDil, cDil_U = get_cDi_lam(U, param) 
         else:
-            cDil, cDil_U = get_cDi_lamwake(U, param) 
-            cDil, cDil_U = get_cDi_lamwake(U, param) 
+            cDil, cDil_U = get_cDi_lamwake(U, param)
         cDi0, cDi0_U = get_cDi_outer(U, param)
         cDi = cDi + cDi0; cDi_U = cDi_U + cDi0_U
         cDi0, cDi0_U = get_cDi_lamstress(U, param)
