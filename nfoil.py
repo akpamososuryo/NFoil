@@ -664,6 +664,11 @@ def build_AIC_rhs_numba(X, tcp, tdp):
     A = np.zeros((N+1, N+1))
     rhs = np.zeros((N+1, 2))
     
+    # TE source influence
+    Xte = np.empty((2, 2))
+    Xte[:, 0] = X[:, N-1]
+    Xte[:, 1] = X[:, 0]
+    
     for i in prange(N):
         xi = X[:, i]
         for j in range(N-1):
@@ -677,10 +682,6 @@ def build_AIC_rhs_numba(X, tcp, tdp):
         rhs[i, 0] = -xi[1]
         rhs[i, 1] = xi[0]
         
-        # TE source influence
-        Xte = np.empty((2, 2))
-        Xte[:, 0] = X[:, N-1]
-        Xte[:, 1] = X[:, 0]
         a = panel_constsource_stream(Xte, xi)
         A[i, 0] += -a * (0.5 * tcp)
         A[i, N-1] += a * (0.5 * tcp)
