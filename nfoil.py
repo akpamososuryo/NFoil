@@ -1835,6 +1835,9 @@ def rebuild_ue_m(M):
   
     # ue_m = ue_sigma * sigma_m [(N+Nw) x (N+Nw)] (not sparse)
     M.vsol.ue_m = sparse.spdiags(sgue,0,N+Nw,N+Nw,'csr') @ M.vsol.ue_sigma @ M.vsol.sigma_m
+
+    # cache dense version, handling both sparse and dense results
+    M.vsol.ue_m_dense = M.vsol.ue_m.toarray() if sparse.issparse(M.vsol.ue_m) else np.asarray(M.vsol.ue_m)
   
 #-------------------------------------------------------------------------------
 def init_thermo(M):
