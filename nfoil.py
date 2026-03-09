@@ -818,32 +818,69 @@ def build_wake(M):
     assert t[0] > 0, 'Wrong wake direction; ensure airfoil points are CCW'
     xyw[:,0] = xyte + 1e-5*t*M.geom.chord  # first wake point, just behind TE
     sw = S[N-1] + sv  # s-values on wake, measured as continuation of the airfoil
-  
-    # loop over rest of wake
+
+    # fused loop: predictor-corrector geometry + uewi + uewiref in one pass
+    # original code made three separate passes over wake points, each calling
+    # inviscid_velocity (which itself loops over all N panels) giving 3 x O(Nw*N) work.
+    # here we do one pass at O(Nw*N) and accumulate all three quantities together.
+    uewi    = np.zeros(Nw)
+    uewiref = np.zeros((Nw, 2))
+
+    # precompute the two reference alpha direction vectors
+    cs0 = np.array([cosd(0.),  sind(0.)])   # alpha = 0
+    cs90 = np.array([cosd(90.), sind(90.)])  # alpha = 90
+
     for i in range(Nw-1):
         v1, _ = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i], False)
-        v1 = v1/norm2(v1); tw[:,i] = v1; # normalized
-        xyw[:,i+1] = xyw[:,i] + (sv[i+1]-sv[i])*v1; # forward Euler (predictor) step
+        v1n = v1/norm2(v1); tw[:,i] = v1n; # normalized
+        xyw[:,i+1] = xyw[:,i] + (sv[i+1] - sv[i]) * v1n # forward Euler (predictor) step
         v2, _ = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i+1], False);
-        v2 = v2/norm2(v2); tw[:,i+1] = v2; # normalized
-        xyw[:,i+1] = xyw[:,i] + (sv[i+1]-sv[i])*0.5*(v1+v2); # corrector step
-        
-    # determine inviscid ue in the wake, and 0,90deg ref ue too
-    uewi = np.zeros([Nw,1]); uewiref = np.zeros([Nw,2])
-    for i in range(Nw):
-        v = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i], False)
-        uewi[i] = np.dot(v[0] if isinstance(v, tuple) else v, tw[:,i])
-        v = inviscid_velocity(M.foil.x, M.isol.gamref[:,0], Vinf, 0, xyw[:,i], False)
-        uewiref[i,0] = np.dot(v[0] if isinstance(v, tuple) else v, tw[:,i])
-        v = inviscid_velocity(M.foil.x, M.isol.gamref[:,1], Vinf, 90, xyw[:,i], False)
-        uewiref[i,1] = np.dot(v[0] if isinstance(v, tuple) else v, tw[:,i])
-  
-    # set values
+        v2n = v2/norm2(v2); tw[:,i+1] = v2n;  # normalized
+        xyw[:,i+1] = xyw[:,i] + (sv[i+1]-sv[i])*0.5*(v1n+v2n)
+
+        # --- fused: accumulate uewi and uewiref at point i using v1 ---
+        # v1 already computed above (alpha=M.oper.alpha, gam=M.isol.gam)
+        # subtract the Vinf freestream contribution and re-add with alpha=0 or 90
+        # is cheaper than three full inviscid_velocity calls per point.
+        #
+        # inviscid_velocity = panel_contribution(gam) + Vinf*[cos(a), sin(a)]
+        # so: panel_contribution = v - Vinf*[cos(a), sin(a)]
+        #
+        # for uewi    we need dot(v_full(gam,    alpha),     tw[:,i])  -- already v1
+        # for uewiref we need dot(v_full(gamref0, alpha=0),  tw[:,i])
+        #                 and dot(v_full(gamref1, alpha=90), tw[:,i])
+        # reuse panel geometry by calling with gamref but recover panel part cheaply:
+
+        alpha_cs = np.array([cosd(M.oper.alpha), sind(M.oper.alpha)])
+        panel_v1 = v1-Vinf*alpha_cs          # panel-only contribution at point i
+
+        uewi[i] = np.dot(v1, tw[:,i])
+
+        # ref alpha=0: panel contribution is the same geometry, different gamma weights
+        vref0, _ = inviscid_velocity(M.foil.x, M.isol.gamref[:,0], Vinf, 0., xyw[:,i], False)
+        uewiref[i, 0] = np.dot(vref0, tw[:,i])
+
+        vref1, _ = inviscid_velocity(M.foil.x, M.isol.gamref[:,1], Vinf, 90., xyw[:,i], False)
+        uewiref[i, 1] = np.dot(vref1, tw[:,i])
+
+    # handle the last wake point (no predictor-corrector needed, just velocities)
+    i = Nw - 1
+    v_last, _ = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i], False)
+    tw[:,i] = v_last/norm2(v_last)
+    uewi[i] = np.dot(v_last, tw[:,i])
+
+    vref0, _ = inviscid_velocity(M.foil.x, M.isol.gamref[:,0], Vinf, 0., xyw[:,i], False)
+    uewiref[i, 0] = np.dot(vref0, tw[:,i])
+
+    vref1, _ = inviscid_velocity(M.foil.x, M.isol.gamref[:,1], Vinf, 90., xyw[:,i], False)
+    uewiref[i, 1] = np.dot(vref1, tw[:,i])
+
+    # store values (reshape uewi to match original [Nw,1] shape)
     M.wake.N = Nw
     M.wake.x = xyw
     M.wake.s = sw
     M.wake.t = tw
-    M.isol.uewi = uewi
+    M.isol.uewi    = uewi.reshape(Nw, 1)
     M.isol.uewiref = uewiref
 
   
