@@ -2191,7 +2191,8 @@ def solve_glob(M):
     R_V[0:3*Nsys, 0:4*Nsys] = M.glob.R_U
     
     # ue equation rows
-    ue_m_dense = M.vsol.ue_m.toarray() if sparse.issparse(M.vsol.ue_m) else M.vsol.ue_m
+    # ue_m_dense = M.vsol.ue_m.toarray() if sparse.issparse(M.vsol.ue_m) else M.vsol.ue_m
+    ue_m_dense = M.vsol.ue_m_dense
     for k in range(Nsys):
         R_V[3*Nsys + k, 4*k + 3] = 1.0  # identity for ue
     R_V[3*Nsys:4*Nsys, :][:, Iue] -= ue_m_dense * ds[np.newaxis, :]
