@@ -35,6 +35,7 @@ from scipy.interpolate import CubicSpline, interp1d
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from numba import njit, prange
+from scipy.sparse import linalg as sparse_linalg  # add this line
 
 warnings.filterwarnings('ignore', category=sparse.SparseEfficiencyWarning)
 
@@ -109,6 +110,7 @@ class Vsol:   # viscous solution variables
         S.Is = []               # 3 arrays of surface indices
         S.wgap = []             # wake gap over wake points
         S.ue_m = []             # linearization of ue w.r.t. mass (all nodes)
+        S.ue_m_dense = None
         S.sigma_m = []          # d(source)/d(mass) matrix
         S.ue_sigma = []         # d(ue)/d(source) matrix
         S.turb = []             # flag over nodes indicating if turbulent (1) or lam (0) 
@@ -506,7 +508,6 @@ def calc_force(M):
         for si in range(2):
             Is = M.vsol.Is[si]  # surface point indices
             param = build_param(M, si) # get parameter structure
-            bl_param_si = make_bl_param(param)
             station_param(M, param, Is[0])
             cf1 = 0.0 # first cf value
             ue1 = 0.0
@@ -514,9 +515,10 @@ def calc_force(M):
             x1 = M.isol.xstag;
             for i in range(len(Is)):
                 station_param(M, param, Is[i])
-                cf2, cf2_U = get_cf(M.glob.U[:,Is[i]], bl_param_si) # get cf value
-                ue2, ue2_ue = get_uk(M.glob.U[3,Is[i]], bl_param_si)
-                rho2, rho2_U = get_rho(M.glob.U[:,Is[i]], bl_param_si)
+                bl_param_si_inner = make_bl_param(param)
+                cf2, cf2_U = get_cf(M.glob.U[:,Is[i]], bl_param_si_inner) # get cf value
+                ue2, ue2_ue = get_uk(M.glob.U[3,Is[i]], bl_param_si_inner)
+                rho2, rho2_U = get_rho(M.glob.U[:,Is[i]], bl_param_si_inner)
                 x2 = M.foil.x[:,Is[i]]; dxv = x2 - x1
                 dx = dxv[0]*cosd(alpha) + dxv[1]*sind(alpha)
                 Df += 0.25*(rho1*cf1*ue1**2 + rho2*cf2*ue2**2)*dx
