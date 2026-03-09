@@ -35,7 +35,6 @@ from scipy.interpolate import CubicSpline, interp1d
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from numba import njit, prange
-from scipy.sparse import linalg as sparse_linalg  # add this line
 
 warnings.filterwarnings('ignore', category=sparse.SparseEfficiencyWarning)
 
@@ -307,7 +306,7 @@ def plot_cpplus(ax, M):
     chord = M.geom.chord
     x = M.foil.x[0,:].copy()
     N = M.foil.N
-    xrng = np.array([-.1,1.4])*chord;
+    xrng = np.array([-.1,1.4])*chord
     if (M.oper.viscous):
         x = np.concatenate((x, M.wake.x[0,:]))
         colors = ['red', 'blue', 'black']
@@ -359,10 +358,10 @@ def plot_airfoil(ax, M):
     # OUTPUT
     #   airfoil plot on given axes
 
-    chord = M.geom.chord;
+    chord = M.geom.chord
     xz = M.foil.x.copy()
     if (M.oper.viscous): xz = np.hstack((xz, M.wake.x))
-    xrng = np.array([-.1,1.4])*chord;
+    xrng = np.array([-.1,1.4])*chord
     ax.plot(xz[0,:], xz[1,:], '-', color='black', linewidth=1)
     ax.axis('equal'); ax.set_xlim(xrng); ax.axis('off')  
 
@@ -382,10 +381,10 @@ def mplot_boundary_layer(ax, M):
     t = np.hstack((M.foil.t, M.wake.t))  # tangents
     n = np.vstack((-t[1,:], t[0,:])) # outward normals
     for i in range(n.shape[1]): n[:,i] /= norm2(n[:,i])
-    xzd = xz + n*ds; # airfoil + delta*
+    xzd = xz + n*ds # airfoil + delta*
     ctype = ['red', 'blue', 'black']
     for i in range(4):
-        si = i;
+        si = i
         if (si==2): xzd = xz + n*ds*ru
         if (si==3): xzd, si = xz - n*ds*rl, 2
         Is = M.vsol.Is[si]
@@ -512,7 +511,7 @@ def calc_force(M):
             cf1 = 0.0 # first cf value
             ue1 = 0.0
             rho1 = rho
-            x1 = M.isol.xstag;
+            x1 = M.isol.xstag
             for i in range(len(Is)):
                 station_param(M, param, Is[i])
                 bl_param_si_inner = make_bl_param(param)
@@ -589,7 +588,7 @@ def clear_solution(M):
     M.vsol = Vsol()
     M.glob = Glob()
     M.post = Post()
-    M.wake.N = 0;
+    M.wake.N = 0
     M.wake.x = []
     M.wake.s = []
     M.wake.t = []
@@ -613,7 +612,7 @@ def solve_inviscid(M):
     build_gamma(M, M.oper.alpha)
     #if (M.oper.givencl): cltrim_inviscid(M)
     calc_force(M)
-    M.glob.conv = True; # no coupled system ... convergence is guaranteed
+    M.glob.conv = True # no coupled system ... convergence is guaranteed
 
 
 
@@ -652,8 +651,8 @@ def get_ueinvref(M):
     assert len(M.isol.gam) > 0, 'No inviscid solution'  
     uearef = M.isol.gamref * M.isol.sgnue[:, np.newaxis]
     if (M.oper.viscous) and (M.wake.N > 0):
-        uewref = M.isol.uewiref; # wake
-        uewref[0,:] = uearef[-1,:]; # continuity of upper surface and wake
+        uewref = M.isol.uewiref # wake
+        uewref[0,:] = uearef[-1,:] # continuity of upper surface and wake
     else:
         uewref = np.array([])
     ueinvref = np.vstack((uearef, uewref))
@@ -735,7 +734,7 @@ def build_gamma(M, alpha):
     g = np.linalg.solve(M.isol.AIC, rhs)
 
     M.isol.gamref = g[0:N,:] # last value is surf streamfunction
-    M.isol.gam = M.isol.gamref[:,0]*cosd(alpha) + M.isol.gamref[:,1]*sind(alpha);
+    M.isol.gam = M.isol.gamref[:,0]*cosd(alpha) + M.isol.gamref[:,1]*sind(alpha)
 
 
 
@@ -834,10 +833,10 @@ def build_wake(M):
 
     for i in range(Nw-1):
         v1, _ = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i], False)
-        v1n = v1/norm2(v1); tw[:,i] = v1n; # normalized
+        v1n = v1/norm2(v1); tw[:,i] = v1n # normalized
         xyw[:,i+1] = xyw[:,i] + (sv[i+1] - sv[i]) * v1n # forward Euler (predictor) step
-        v2, _ = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i+1], False);
-        v2n = v2/norm2(v2); tw[:,i+1] = v2n;  # normalized
+        v2, _ = inviscid_velocity(M.foil.x, M.isol.gam, Vinf, M.oper.alpha, xyw[:,i+1], False)
+        v2n = v2/norm2(v2); tw[:,i+1] = v2n  # normalized
         xyw[:,i+1] = xyw[:,i] + (sv[i+1]-sv[i])*0.5*(v1n+v2n)
 
         # --- fused: accumulate uewi and uewiref at point i using v1 ---
@@ -905,7 +904,7 @@ def stagpoint_find(M):
     assert (j<N-1), 'no stagnation point'
     I = [j-1,j]
     G = M.isol.gam[I]; S = M.foil.s[I]
-    M.isol.Istag = I;  # indices of neighboring gammas
+    M.isol.Istag = I  # indices of neighboring gammas
     den = (G[1]-G[0]); w1 = G[1]/den; w2 = -G[0]/den
     M.isol.sstag = w1*S[0] + w2*S[1]  # s location
     M.isol.xstag = M.foil.x[:,j-1]*w1 + M.foil.x[:,j]*w2  # x location
@@ -958,8 +957,8 @@ def make_panels(M, npanel, stgt):
     #   Uses curvature-based point distribution on a spline of the points
 
     clear_solution(M) # clear any existing solution
-    Ufac = 2;  # uniformity factor (higher, more uniform paneling)
-    TEfac = 0.1; # Trailing-edge factor (higher, more TE resolution)
+    Ufac = 2  # uniformity factor (higher, more uniform paneling)
+    TEfac = 0.1 # Trailing-edge factor (higher, more TE resolution)
     M.foil.x, M.foil.s, M.foil.t = spline_curvature(M.geom.xpoint, npanel+1, Ufac, TEfac, stgt)
     M.foil.N = M.foil.x.shape[1]
 
@@ -992,7 +991,7 @@ def TE_info(X):
         tcp = 0.0
         tdp = 1.0
     else:
-        p = s/snorm; # unit vector along TE panel
+        p = s/snorm # unit vector along TE panel
         tcp = abs(t[0]*p[1]-t[1]*p[0]); tdp = np.dot(t,p)
 
     return t, hTE, dtdx, tcp, tdp
@@ -1090,8 +1089,8 @@ def panel_linvortex_velocity(Xj, xi, onmid):
         wg2 =        - temp2
 
     # velocity influence in original coord system
-    a = np.array([ug1*t[0]+wg1*n[0], ug1*t[1]+wg1*n[1]]); # point 1
-    b = np.array([ug2*t[0]+wg2*n[0], ug2*t[1]+wg2*n[1]]); # point 2
+    a = np.array([ug1*t[0]+wg1*n[0], ug1*t[1]+wg1*n[1]]) # point 1
+    b = np.array([ug2*t[0]+wg2*n[0], ug2*t[1]+wg2*n[1]]) # point 2
 
     return a, b
 
@@ -1121,12 +1120,12 @@ def panel_linvortex_stream(Xj, xi):
     logr2 = 0. if (r2 < ep) else np.log(r2)
   
     # streamfunction components
-    P1 = (0.5/np.pi)*(z*(theta2-theta1) - d + x*logr1 - (x-d)*logr2);
-    P2 = x*P1 + (0.5/np.pi)*(0.5*r2**2*logr2 - 0.5*r1**2*logr1 - r2**2/4 + r1**2/4);
+    P1 = (0.5/np.pi)*(z*(theta2-theta1) - d + x*logr1 - (x-d)*logr2)
+    P2 = x*P1 + (0.5/np.pi)*(0.5*r2**2*logr2 - 0.5*r1**2*logr1 - r2**2/4 + r1**2/4)
   
     # influence coefficients
-    a = P1-P2/d;
-    b =    P2/d;
+    a = P1-P2/d
+    b =    P2/d
   
     return a, b
 
@@ -1185,13 +1184,13 @@ def panel_constsource_stream(Xj, xi):
         return 0.0
     
     # streamfunction
-    ep = 1e-9;
+    ep = 1e-9
     logr1, theta1, theta2 = (0, np.pi, np.pi) if (r1 < ep) else (np.log(r1), theta1, theta2)
     logr2, theta1, theta2 = (0,     0,     0) if (r2 < ep) else (np.log(r2), theta1, theta2)
 
     P = (x*(theta1-theta2) + d*theta2 + z*logr1 - z*logr2)/(2*np.pi)
   
-    dP = d; # delta psi
+    dP = d # delta psi
     P = (P - 0.25*dP) if ((theta1+theta2) > np.pi) else (P + 0.75*dP)
 
     # influence coefficient
@@ -1400,7 +1399,7 @@ def panel_linsource_stream(Xj, xi):
     if (theta2<0): theta2 = theta2 + 2*np.pi
     
     # check for r1, r2 zero
-    ep = 1e-9;
+    ep = 1e-9
     logr1, theta1, theta2 = (0, np.pi, np.pi) if (r1 < ep) else (np.log(r1), theta1, theta2)
     logr2, theta1, theta2 = (0,     0,     0) if (r2 < ep) else (np.log(r2), theta1, theta2)
     
@@ -1409,8 +1408,8 @@ def panel_linsource_stream(Xj, xi):
     P2 = x*P1 + (0.5/np.pi)*(0.5*r2**2*theta2 - 0.5*r1**2*theta1 - 0.5*z*d)
   
     # influence coefficients
-    a = P1-P2/d;
-    b =    P2/d;
+    a = P1-P2/d
+    b =    P2/d
   
     return a, b
 
@@ -1467,7 +1466,7 @@ def mgeom_addcamber(M, xzcamb):
 
     # interpolate camber delta, add to X
     dz = interp1d(xzcamb[0,:], xzcamb[1,:], 'cubic', )(X[0,:])
-    X[1,:] += dz;
+    X[1,:] += dz
     
     # store back in M.geom
     M.geom.xpoint = X; M.geom.npoint = M.geom.xpoint.shape[1] 
@@ -1550,13 +1549,13 @@ def set_coords(M, X):
     if (X.shape[0] > X.shape[1]): X = X.transpose()
 
     # ensure CCW
-    A = 0.;
+    A = 0.
     for i in range(X.shape[1]-1): A += (X[0,i+1]-X[0,i])*(X[1,i+1]+X[1,i])
     if (A<0): X = np.fliplr(X)
   
     # store points in M
     M.geom.npoint = X.shape[1]
-    M.geom.xpoint = X;
+    M.geom.xpoint = X
     M.geom.chord = max(X[0,:]) - min(X[0,:])
 
 
@@ -1579,9 +1578,9 @@ def naca_points(M, digits):
     x = 1 - (te+1)*f*(1-f)**te - (1-f)**(te+1)  # bunched points, x, 0 to 1
 
     # normalized thickness, gap at trailing edge (use -.1035*x**4 for no gap)
-    t = .2969*np.sqrt(x) - .126*x - .3516*x**2 + .2843*x**3 - .1015*x**4;
+    t = .2969*np.sqrt(x) - .126*x - .3516*x**2 + .2843*x**3 - .1015*x**4
     tmax = float(digits[-2:])*.01 # max thickness
-    t = t*tmax/.2;
+    t = t*tmax/.2
   
     if (len(digits)==4):
         # 4-digit series
@@ -1594,11 +1593,11 @@ def naca_points(M, digits):
         n = float(digits[1])
         valid = digits[0]=='2' and digits[2]=='0' and n>0 and n<6
         assert valid, '5-digit NACA must begin with 2X0, X in 1-5'
-        mv = [.058, .126, .2025, .29, .391]; m = mv[int(n)-1];
-        cv = [361.4, 51.64, 15.957, 6.643, 3.23]; cc = cv[int(n)-1];
-        c = (cc/6.)*(x**3 - 3*m*x**2 + m**2*(3-m)*x);
+        mv = [.058, .126, .2025, .29, .391]; m = mv[int(n)-1]
+        cv = [361.4, 51.64, 15.957, 6.643, 3.23]; cc = cv[int(n)-1]
+        c = (cc/6.)*(x**3 - 3*m*x**2 + m**2*(3-m)*x)
         for i in range(len(x)): 
-            if x[i] > m: c[i] = (cc/6.)*m**3*(1-x[i]);
+            if x[i] > m: c[i] = (cc/6.)*m**3*(1-x[i])
     else:
         raise ValueError('Provide 4 or 5 NACA digits')
     
@@ -1917,7 +1916,7 @@ def stagpoint_move(M):
     ue = M.glob.U[3,:]  # edge velocity
     sstag0 = M.isol.sstag  # original stag point location
   
-    newpanel = True;  # are we moving to a new panel?
+    newpanel = True  # are we moving to a new panel?
     if (ue[I[1]] < 0):
         # move stagnation point up (larger s, new panel)
         vprint(M.param,2, '  Moving stagnation point up')
@@ -1940,7 +1939,7 @@ def stagpoint_move(M):
         I0 = j
         for j in range(I0+1,I[0]+1): ue[j] *= -1.
         I[0], I[1] = I0, I0+1  # new panel
-    else: newpanel = False; # staying on the current panel
+    else: newpanel = False # staying on the current panel
 
     # move point along panel
     ues, S = ue[I], M.foil.s[I]
@@ -2106,7 +2105,7 @@ def update_state(M):
         if (M.vsol.turb[i]) and (Uk[i]<0.1*ctmax): continue # do not limit small ctau
         if (Uk[i]==0.) or (dUk[i]==0.): continue
         if (Uk[i]+dUk[i] < 0):
-            om = 0.8*abs(Uk[i]/dUk[i]); 
+            om = 0.8*abs(Uk[i]/dUk[i]) 
             if (om<omega): 
                 omega = om
                 vprint(M.param,3, '  neg sa: omega = %.5f'%(omega))
@@ -2149,7 +2148,7 @@ def update_state(M):
     for si in range(3): # loop over surfaces
         Hkmin = 1.00005 if (si==2) else 1.02
         Is = M.vsol.Is[si]  # surface point indices
-        param = build_param(M, si); # get parameter structure
+        param = build_param(M, si) # get parameter structure
         for i in range(len(Is)): # loop over points
             j = Is[i]
             Uj = M.glob.U[:,j]
@@ -2521,7 +2520,7 @@ def init_boundary_layer(M):
   
     ueinv = get_ueinv(M) # get inviscid velocity
 
-    M.glob.Nsys = M.foil.N + M.wake.N; # number of global variables (nodes)
+    M.glob.Nsys = M.foil.N + M.wake.N # number of global variables (nodes)
   
     # do we need to initialize?
     if (not M.oper.initbl) and isinstance(M.glob.U, np.ndarray) and (M.glob.U.shape[1]==M.glob.Nsys):
@@ -2563,7 +2562,7 @@ def init_boundary_layer(M):
             if (xi[0]<1e-8*xi[-1]): K, hitstag = ue[1]/xi[1], True 
             else: K, hitstag = ue[0]/xi[0], False
             th, ds = thwaites_init(K, param.mu0/param.rho0)
-            xst = 1.e-6; # small but nonzero
+            xst = 1.e-6 # small but nonzero
             Ust = np.array([th, ds, 0, K*xst])
             nNewton = 20
             for iNewton in range(nNewton):
@@ -2594,7 +2593,7 @@ def init_boundary_layer(M):
         tran = False # flag indicating that we are at transition
         i = i0+1
         while (i<N):
-            Ip = [i-1,i]; # two points involved in the calculation
+            Ip = [i-1,i] # two points involved in the calculation
             U[:,i] = U[:,i-1]; U[3,i] = ue[i]  # guess = same state, new ue
             if (tran): # set shear stress at transition interval
                 ct, ct_U = get_cttr(U[:,i], bl_param_si); U[2,i] = ct
@@ -2708,7 +2707,7 @@ def store_transition(M, si, i):
     # OUTPUT
     #   M.vsol.Xt stores the transition location s and x values
   
-    xt = M.vsol.xt;
+    xt = M.vsol.xt
     i0, i1 = M.vsol.Is[si][i-1], M.vsol.Is[si][i] # pre/post transition nodes
     xi0, xi1 = M.isol.xi[i0], M.isol.xi[i1]  # xi (s) locations at nodes
     assert ((i0<M.foil.N) and (i1<M.foil.N)), 'Can only store transition on airfoil'
@@ -2864,9 +2863,9 @@ def residual_transition_jit(param, x, U, Aux):
     Ut_x2 += Ut_xt*xt_x2
     Ut_U1 = w1*np.eye(4) + np.outer((U2-U1),xt_U[0:4])/dx
     Ut_U2 = w2*np.eye(4) + np.outer((U2-U1),xt_U[4:8])/dx
-    Utl = Ut.copy(); Utl_U1 = Ut_U1.copy(); Utl_U2 = Ut_U2.copy(); Utl_x1 = Ut_x1.copy(); Utl_x2 = Ut_x2.copy();
-    Utl[2] = ncrit; Utl_U1[2,:] = Z; Utl_U2[2,:] = Z; Utl_x1[2] = 0; Utl_x2[2] = 0;
-    Utt = Ut.copy(); Utt_U1 = Ut_U1.copy(); Utt_U2 = Ut_U2.copy(); Utt_x1 = Ut_x1.copy(); Utt_x2 = Ut_x2.copy();
+    Utl = Ut.copy(); Utl_U1 = Ut_U1.copy(); Utl_U2 = Ut_U2.copy(); Utl_x1 = Ut_x1.copy(); Utl_x2 = Ut_x2.copy()
+    Utl[2] = ncrit; Utl_U1[2,:] = Z; Utl_U2[2,:] = Z; Utl_x1[2] = 0; Utl_x2[2] = 0
+    Utt = Ut.copy(); Utt_U1 = Ut_U1.copy(); Utt_U2 = Ut_U2.copy(); Utt_x1 = Ut_x1.copy(); Utt_x2 = Ut_x2.copy()
     param_turb = BL_Param(param.wake, True, param.simi, param.Minf, param.Vinf, param.muinf, param.mu0, param.rho0, param.H0, param.Tsrat, param.gam, param.KTb, param.KTl, param.cps, param.SlagK, param.Dlr, param.Cuq, param.ncrit, param.CtauC, param.CtauE, param.GA, param.GB, param.GC)
     cttr, cttr_Ut = get_cttr(Ut, param_turb)
     Utt[2] = cttr; Utt_U1[2,:] = np.dot(cttr_Ut, Ut_U1); Utt_U2[2,:] = np.dot(cttr_Ut, Ut_U2)
@@ -2988,7 +2987,7 @@ def residual_station_jit(param, x, Uin, Aux):
         Clag = Klag/beta*1./(1.+Us)
         Clag_U = -Clag/(1.0+Us)*Us_U
     
-        ald = 1.0;
+        ald = 1.0
         if (param.wake): ald = param.Dlr
     
         Rlag = Clag*(cteq-ald*saa)*dx - 2*de*salog + 2.0*de*(uq*dx-uelog)*param.Cuq
@@ -3162,7 +3161,7 @@ def residual_station(param, x, Uin, Aux):
         Clag_U = -Clag/(1.+Us)*Us_U
     
         # extra dissipation in wake
-        ald = 1.0;
+        ald = 1.0
         if (param.wake): ald = param.Dlr
     
         # shear lag equation
@@ -3261,7 +3260,7 @@ def get_upw(U1, U2, param):
     Z = np.zeros(Hk1_U1.shape)
     Hut = 1.  # triggering constant for upwinding
     C = 1. if (param.wake) else 5.
-    Huc = C*Hut/Hk2**2; # only depends on U2
+    Huc = C*Hut/Hk2**2 # only depends on U2
     Huc_U = np.concatenate((Z, -2*Huc/Hk2*Hk2_U2))
     aa = (Hk2-1.)/(Hk1-1.); sga = np.sign(aa)
     la = np.log(sga*aa)
@@ -3718,7 +3717,7 @@ def get_cdutstag(Uin, param):
         num = .00205*(4-Hk)**5.5 + .207
         num_Hk = .00205*5.5*(4-Hk)**4.5*(-1)
     else:
-        Hk1 = Hk-4;
+        Hk1 = Hk-4
         num = -.0016*Hk1**2/(1+.02*Hk1**2) + .207
         num_Hk = -.0016*(2*Hk1/(1+.02*Hk1**2) - Hk1**2/(1+.02*Hk1**2)**2*.02*2*Hk1)
   
@@ -3991,7 +3990,7 @@ def ping_test(M):
         R, R_U, R_x = residual_transition(M, param, x, U, Aux)
         v.append(R); v_u.append(np.dot(R_U, np.reshape(dU,8,order='F')) + np.dot(R_x,dx))
         U += ep*dU; x += ep*dx
-    check_ping(ep, v, v_u, 'transition residual');  
+    check_ping(ep, v, v_u, 'transition residual')  
 
     # stagnation residual ping
     M.oper.Re = 1e6; M.oper.alpha = 1; init_thermo(M); param = build_param(M,1)
@@ -4051,7 +4050,7 @@ def ping_test(M):
         v.append(np.array([M.post.cl])); v_u.append(np.array([np.dot(M.post.cl_ue, due) + M.post.cl_alpha*da]))
         M.glob.U += ep*dU; M.oper.alpha += ep*da
     M.glob.U -= 3*ep*dU; M.oper.alpha -= 3*ep*da
-    check_ping(ep, v, v_u, 'lift calculation');
+    check_ping(ep, v, v_u, 'lift calculation')
 
 
 #-------------------------------------------------------------------------------
