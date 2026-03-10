@@ -2634,12 +2634,17 @@ def init_boundary_layer(M):
                 dU = dU*omega
 
                 # trial update
-                Ui = U[:,i] + dU
-        
-                # clip extreme values
-                if (param.turb): Ui[2] = max(min(Ui[2], 0.3), 1e-7)
-        
-                # check if about to separate
+                Ui = U[:, i] + dU
+                
+                theta_floor = 1e-14
+                ds_floor = 1e-14
+                
+                Ui[0] = max(Ui[0], theta_floor)
+                Ui[1] = max(Ui[1], ds_floor)
+                
+                if param.turb:
+                    Ui[2] = max(min(Ui[2], 0.3), 1e-7)
+                
                 Hmax = Hmaxt if (param.turb) else Hmaxl
                 Hk, Hk_U = get_Hk(Ui, bl_param_si)
 
